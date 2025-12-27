@@ -176,16 +176,15 @@ python server.py --pack a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6  # Uses unpacked/{hash}
 ├── index.php           # PHP proxy server
 ├── .htaccess           # Apache config for PHP
 ├── requirements.txt    # Python dependencies
-├── packer_brotli.py    # Archive packer with brotli compression
-├── downloader_brotli.py # Stream unpacker for packed archives
-├── revcdos.bin         # Packed archive (optional, created by packer_brotli.py)
+├── revcdos.bin         # Packed archive (optional)
 ├── additions/          # Server extensions
 │   ├── auth.py         # HTTP Basic Auth middleware
 │   ├── cache.py        # Proxy caching and brotli decompression
 │   ├── packed.py       # Packed archive serving module
 │   └── saves.py        # Local saves router
 ├── utils/              # Utility modules
-│   └── packer_brotli.py # Packer module (imported by server)
+│   ├── packer_brotli.py # Archive packer with brotli compression
+│   └── downloader_brotli.py # Archive packer with brotli compression
 ├── unpacked/           # Auto-created by --unpacked flag
 │   └── {md5_hash}/     # Unpacked files organized by source hash
 │       ├── vcsky/      # Decompressed game assets
