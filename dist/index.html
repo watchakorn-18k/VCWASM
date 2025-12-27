@@ -511,6 +511,38 @@
             font-size: 0.7em;
             margin-top: 2px;
         }
+        .config-panel {
+            margin: 1em auto;
+            padding: 1em;
+            border: 2px solid #2a1759;
+            max-width: 400px;
+            border-radius: 1em;
+            backdrop-filter: blur(20px);
+            text-align: left;
+        }
+        .config-option {
+            margin: 0.5em 0;
+            color: #fff;
+        }
+        .config-option label {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            cursor: pointer;
+        }
+        .config-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ff4193;
+        }
+        .config-option input[type="number"] {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #2a1759;
+            color: #fff;
+            padding: 0.3em;
+            border-radius: 0.3em;
+            margin-left: 0.5em;
+        }
     </style>
 </head>
 
@@ -553,6 +585,37 @@
         <div class="button-container">
             <div class="cover"></div>
             
+            <div id="config-panel" class="config-panel" style="display: none;">
+                <div class="config-option">
+                    <label for="config-lang">
+                        <span id="config-lang-label">Language:</span>
+                        <select id="config-lang" style="background: rgba(0,0,0,0.3); border: 1px solid #2a1759; color: #fff; padding: 0.3em; border-radius: 0.3em; margin-left: 0.5em;">
+                            <option value="en">English</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="config-option">
+                    <label for="config-cheats">
+                        <input type="checkbox" id="config-cheats">
+                        <span id="config-cheats-label">Cheats (F3)</span>
+                    </label>
+                </div>
+                <div class="config-option">
+                    <label for="config-fullscreen">
+                        <input type="checkbox" id="config-fullscreen" checked>
+                        <span id="config-fullscreen-label">Fullscreen</span>
+                    </label>
+                </div>
+                <div class="config-option">
+                    <label for="config-max-fps">
+                        <span id="config-max-fps-label">Max FPS:</span>
+                        <input type="number" id="config-max-fps" min="0" max="240" value="0" style="width: 60px;">
+                        <span id="config-max-fps-unlimited" style="font-size: 0.8em;">(0 = unlimited)</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="click-to-play">
                 <button id="click-to-play-button">Click to play</button>
                 <div id="demo-off-disclaimer"></div>

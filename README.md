@@ -21,10 +21,12 @@ Web-based port of GTA: Vice City running in browser via WebAssembly.
 
 2. **Configure Assets** (Optional):
 
-   By default, the project uses the **DOS Zone CDN**. For local hosting, download and place assets in [(see structure)](#project-structure):
-    *   **Resources:** `vcsky/fetched/` (or `fetched-ru/`) — `data`, `audio`, `anim`, `models` folders.
-    *   **Binaries:** `vcbr/` — `.wasm.br` and `.data.br` files for your chosen language.
-4. **Launch the Application**:
+   By default, the project uses **DOS Zone CDN** — no local assets needed. For offline hosting you can use:
+   *   **Packed archive** (`--packed` or `--unpacked`) — single `.bin` file with all assets
+   *   **Local folders** (`--vcsky_local`, `--vcbr_local`) — unpacked asset directories
+   *   **Cache mode** (`--vcsky_cache`, `--vcbr_cache`) — download from CDN once, serve locally after
+
+3. **Launch the Application**:
    Choose one of the setup methods below:
    * **Docker** (Recommended for most users) — fast and isolated.
    * **PHP** — Simply upload the folder to your web server (FTP/Hosting).
@@ -36,7 +38,7 @@ Web-based port of GTA: Vice City running in browser via WebAssembly.
 The easiest way to get started is using Docker Compose:
 
 ```bash
-VCSKY_CACHE=1 VCBR_CACHE=1 docker compose up -d --build
+PACKED=https://folder.morgen.monster/revcdos.bin docker compose up -d --build
 ```
 
 To configure server options via environment variables:
@@ -54,12 +56,15 @@ IN_PORT=3000 AUTH_LOGIN=admin AUTH_PASSWORD=secret CUSTOM_SAVES=1 docker compose
 | `AUTH_LOGIN` | HTTP Basic Auth username |
 | `AUTH_PASSWORD` | HTTP Basic Auth password |
 | `CUSTOM_SAVES` | Enable local saves (set to `1`) |
-| `VCSKY_LOCAL` | Serve vcsky from local directory (set to `1`) |
-| `VCBR_LOCAL` | Serve vcbr from local directory (set to `1`) |
+| `VCSKY_LOCAL` | Serve vcsky from local directory (set to `1`, or path like `/data/vcsky`) |
+| `VCBR_LOCAL` | Serve vcbr from local directory (set to `1`, or path like `/data/vcbr`) |
 | `VCSKY_URL` | Custom vcsky proxy URL |
 | `VCBR_URL` | Custom vcbr proxy URL |
 | `VCSKY_CACHE` | Cache vcsky files locally while proxying (set to `1`) |
 | `VCBR_CACHE` | Cache vcbr files locally while proxying (set to `1`) |
+| `PACKED` | Serve from packed archive (filename or URL, e.g., `revcdos.bin`) |
+| `UNPACKED` | Unpack archive to local folders (filename or URL, auto-sets vcsky/vcbr paths) |
+| `PACK` | Pack a folder and serve from resulting archive (folder path or MD5 hash) |
 
 ### Option 2: Local Installation
 
@@ -70,7 +75,7 @@ pip install -r requirements.txt
 
 2. Start the server:
 ```bash
-python server.py --vcsky_cache --vcbr_cache
+python server.py --packed https://folder.morgen.monster/revcdos.bin
 ```
 
 Server starts at `http://localhost:8000`
@@ -87,12 +92,15 @@ By default the `index.php` and `.htaccess` will get the job done.
 | `--custom_saves` | flag | disabled | Enable local save files (saves router) |
 | `--login` | string | none | HTTP Basic Auth username |
 | `--password` | string | none | HTTP Basic Auth password |
-| `--vcsky_local` | flag | disabled | Serve vcsky from local `vcsky/` directory |
-| `--vcbr_local` | flag | disabled | Serve vcbr from local `vcbr/` directory |
+| `--vcsky_local` | string/flag | disabled | Serve vcsky from local directory. Use flag for `vcsky/` or specify path |
+| `--vcbr_local` | string/flag | disabled | Serve vcbr from local directory. Use flag for `vcbr/` or specify path |
 | `--vcsky_url` | string | `https://cdn.dos.zone/vcsky/` | Custom vcsky proxy URL |
 | `--vcbr_url` | string | `https://br.cdn.dos.zone/vcsky/` | Custom vcbr proxy URL |
 | `--vcsky_cache` | flag | disabled | Cache vcsky files locally while proxying |
 | `--vcbr_cache` | flag | disabled | Cache vcbr files locally while proxying |
+| `--packed` | string | disabled | Serve from packed archive file. Accepts file path or URL |
+| `--unpacked` | string | disabled | Unpack archive to `unpacked/{hash}/` and serve from there. Accepts file path or URL |
+| `--pack` | string | disabled | Pack a folder and serve from resulting `{hash}.bin` archive. Accepts folder path or MD5 hash |
 
 **Examples:**
 ```bash
@@ -105,24 +113,44 @@ python server.py --custom_saves
 # Enable HTTP Basic Authentication
 python server.py --login admin --password secret123
 
-# Use local vcsky and vcbr files (fully offline mode)
+# Use local vcsky and vcbr files
 python server.py --vcsky_local --vcbr_local
-
-# Use custom proxy URLs
-python server.py --vcsky_url https://my-cdn.example.com/vcsky/ --vcbr_url https://my-cdn.example.com/vcbr/
 
 # Cache files locally while proxying (hybrid mode) (recommended)
 python server.py --vcsky_cache --vcbr_cache
 
-# All options combined
-python server.py --port 3000 --custom_saves --login admin --password secret123 --vcsky_local --vcbr_local
+# Serve from packed archive (local file)
+python server.py --packed revcdos.bin
+
+# Serve from packed archive (download from URL if not present)
+python server.py --packed https://example.com/revcdos.bin
+
+# Unpack archive and serve from unpacked files
+python server.py --unpacked revcdos.bin
+
+# Stream-unpack from URL (downloads and unpacks simultaneously)
+python server.py --unpacked https://example.com/revcdos.bin
+
+# Pack a folder and serve from the resulting archive
+python server.py --pack /path/to/assets  # Creates {folder_hash}.bin
+
+# Pack from existing unpacked folder by MD5 hash
+python server.py --pack a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6  # Uses unpacked/{hash}/
 ```
 
 > **Note:** HTTP Basic Auth is only enabled when both `--login` and `--password` are provided.
 
-> **Note:** By default, vcsky and vcbr are proxied from DOS Zone CDN. Use `--vcsky_local` and `--vcbr_local` flags to serve files from local directories instead.
+> **Note:** By default, vcsky and vcbr are proxied from DOS Zone CDN. Use `--vcsky_local` and `--vcbr_local` flags to serve files from local directories instead. You can optionally specify a custom path.
 
 > **Note:** Use `--vcsky_cache` and `--vcbr_cache` to cache proxied files locally. Files are downloaded once and served from local storage on subsequent requests.
+
+> **Note:** `--packed` serves files directly from a compressed archive without unpacking (faster and more compressed). `--unpacked` extracts the archive once and serves from local files (if you want edit assets).
+
+> **Note:** When using URL with `--unpacked`, the archive is streamed and unpacked simultaneously during download using `downloader_brotli.py`.
+
+> **Note:** You can pass a raw MD5 hash (32 hex characters) to `--unpacked` to use an existing unpacked folder without needing the original archive. Example: if you have `unpacked/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6/`, you can start the server with `--unpacked a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6`.
+
+> **Note:** `--pack` creates a packed archive from a folder containing subfolders (like `vcsky/` and `vcbr/`). Each subfolder is packed sequentially: the first creates the archive, subsequent ones are appended. After packing, the server automatically uses the created archive via `--packed` mode.
 
 ## URL Parameters
 
@@ -133,23 +161,35 @@ python server.py --port 3000 --custom_saves --login admin --password secret123 -
 | `request_original_game` | `1` | Request original game files before play |
 | `fullscreen` | `0` | Disable auto-fullscreen |
 | `max_fps` | `1-240` | Limit frame rate (e.g., `60` for 60 FPS) |
+| `configurable` | `1` | Show configuration UI before play button |
 
 
 **Examples:**
 - `http://localhost:8000/?lang=ru` — Russian version
 - `http://localhost:8000/?lang=en&cheats=1` — English + cheats
+- `http://localhost:8000/?configurable=1` — Show settings UI before play
 
 ## Project Structure
 
 ```
 ├── server.py           # FastAPI proxy server
-├── index.php           # php proxy server
-├── .htaccess           # apache config for php
+├── index.php           # PHP proxy server
+├── .htaccess           # Apache config for PHP
 ├── requirements.txt    # Python dependencies
+├── packer_brotli.py    # Archive packer with brotli compression
+├── downloader_brotli.py # Stream unpacker for packed archives
+├── revcdos.bin         # Packed archive (optional, created by packer_brotli.py)
 ├── additions/          # Server extensions
 │   ├── auth.py         # HTTP Basic Auth middleware
 │   ├── cache.py        # Proxy caching and brotli decompression
+│   ├── packed.py       # Packed archive serving module
 │   └── saves.py        # Local saves router
+├── utils/              # Utility modules
+│   └── packer_brotli.py # Packer module (imported by server)
+├── unpacked/           # Auto-created by --unpacked flag
+│   └── {md5_hash}/     # Unpacked files organized by source hash
+│       ├── vcsky/      # Decompressed game assets
+│       └── vcbr/       # Brotli-compressed binaries
 ├── dist/               # Game client files
 │   ├── index.html      # Main page
 │   ├── game.js         # Game loader
@@ -180,13 +220,13 @@ python server.py --port 3000 --custom_saves --login admin --password secret123 -
 │   ├── vc-sky-en-v6.wasm.br
 │   ├── vc-sky-ru-v6.data.br
 │   └── vc-sky-ru-v6.wasm.br
-└── vcsky/                 # Decompressed assets (optional)
-    ├── fetched/           # English version files
+└── vcsky/              # Decompressed assets (optional)
+    ├── fetched/        # English version files
     │   ├── data/
     │   ├── audio/
     │   ├── models/
     │   └── anim/
-    └── fetched-ru/        # Russian version files
+    └── fetched-ru/     # Russian version files
         ├── data/
         ├── audio/
         └── ...
